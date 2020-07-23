@@ -17,7 +17,7 @@ module.exports = {
     announcementBar: {
       id: 'support_us',
       content: [
-        '<strong>We are working on v2.0</strong>. Contribute to its <a target="_blank" rel="noopener noreferrer" href="https://github.com/kamilkisiela/graphql-inspector/issues/1371">roadmap</a> by suggesting features.',
+        '<strong>We are working on v3.0</strong>. Contribute to its <a target="_blank" rel="noopener noreferrer" href="https://github.com/kamilkisiela/graphql-inspector/discussions/1371">roadmap</a> by suggesting features.',
         'If you like GraphQL Inspector give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/kamilkisiela/graphql-inspector/">GitHub</a> and <a target="_blank" rel="noopener noreferrer" href="https://github.com/sponsors/kamilkisiela">consider supporting the project</a>!',
       ].join(' '),
       backgroundColor: '#292d3e',
@@ -31,19 +31,14 @@ module.exports = {
       },
       links: [
         {
-          to: '/docs/',
+          to: '/docs',
           activeBasePath: '/docs',
           label: 'Documentation',
           position: 'right',
         },
         {
-          href: '/install',
-          label: 'GitHub App',
-          position: 'right',
-        },
-        {
-          href: '/action',
-          label: 'GitHub Action',
+          to: '/enterprise',
+          label: 'Enterprise',
           position: 'right',
         },
         {
@@ -112,7 +107,7 @@ module.exports = {
             },
             {
               label: 'Other projects',
-              href: 'https://github.com/the-guild-org/Stack',
+              href: 'https://the-guild.dev',
             },
             {
               label: 'Mailing List',
@@ -129,7 +124,7 @@ module.exports = {
           items: [
             {
               label: 'Blog',
-              href: 'https://medium.com/the-guild',
+              href: 'https://the-guild.dev/blog',
             },
             {
               label: 'GitHub',
@@ -165,18 +160,13 @@ module.exports = {
       async: true,
       defer: true,
     },
-    {
-      src: '/js/drift.js',
-      async: true,
-      defer: true,
-    },
   ],
   stylesheets: [
     'https://fonts.googleapis.com/css?family=Lato:300,400,700,900&display=swap',
   ],
   presets: [
     [
-      '@docusaurus/preset-classic',
+      require.resolve('@docusaurus/preset-classic'),
       {
         docs: {
           path: 'docs',
@@ -198,7 +188,7 @@ module.exports = {
   ],
   plugins: [
     [
-      '@docusaurus/plugin-ideal-image',
+      require.resolve('@docusaurus/plugin-ideal-image'),
       {
         size: 800,
         max: 800,

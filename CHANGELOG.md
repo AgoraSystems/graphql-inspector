@@ -2,7 +2,21 @@
 
 ### vNEXT
 
-- **github**: put annotations of removed parts of schema on new schema [#1414](https://github.com/kamilkisiela/graphql-inspector/issues/1414)
+### v2.1.0
+
+- Use GraphQL Tools v6
+- Integration with GraphQL CLI
+
+### v2.0.1
+
+- **github** skip diff checks for new branches and re-check once Pull Request is opened [#1493](https://github.com/kamilkisiela/graphql-inspector/issues/1493)
+- **action github cli ci loaders** - assume valid Schema and SDL [#1508](https://github.com/kamilkisiela/graphql-inspector/pull/1508)
+
+### v2.0.0
+
+Read ["New GraphQL Inspector"](https://the-guild.dev/blog/new-graphql-inspector) on our blog
+
+- **github** put annotations of removed parts of schema on new schema [#1414](https://github.com/kamilkisiela/graphql-inspector/issues/1414)
 - **ci**: improve UX [#1413](https://github.com/kamilkisiela/graphql-inspector/pull/1413)
 - **github** schema change notifications on Slack, Discord and through Webhook.
 - **github** **action** opt-out annotations

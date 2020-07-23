@@ -7,19 +7,18 @@
     "deploy": "docusaurus deploy"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.0-alpha.54",
-    "@docusaurus/preset-classic": "2.0.0-alpha.54",
-    "@docusaurus/plugin-ideal-image": "2.0.0-alpha.54",
-    "@graphql-inspector/core": "1.30.4",
+    "@docusaurus/core": "2.0.0-alpha.58",
+    "@docusaurus/preset-classic": "2.0.0-alpha.58",
+    "@docusaurus/plugin-ideal-image": "2.0.0-alpha.58",
+    "@graphql-inspector/core": "2.1.0",
     "classnames": "2.2.6",
-    "fetch-ponyfill": "6.1.0",
-    "globby": "11.0.0",
+    "fetch-ponyfill": "6.1.1",
+    "globby": "11.0.1",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-feather": "2.0.8",
     "react-flip-move": "3.0.4",
-    "react-monaco-editor": "0.36.0",
-    "styled-components": "5.1.0"
+    "react-monaco-editor": "0.39.1"
   },
   "browserslist": {
     "production": [

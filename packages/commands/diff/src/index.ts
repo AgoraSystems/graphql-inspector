@@ -3,6 +3,7 @@ import {
   ensureAbsolute,
   parseGlobalArgs,
   GlobalArgs,
+  CommandFactory,
 } from '@graphql-inspector/commands';
 import {symbols, Logger, bolderize} from '@graphql-inspector/logger';
 import {
@@ -15,13 +16,79 @@ import {
   CompletionArgs,
 } from '@graphql-inspector/core';
 import {existsSync} from 'fs';
+import {GraphQLSchema} from 'graphql';
+
+export {CommandFactory};
+
+export function handler(input: {
+  oldSchema: GraphQLSchema;
+  newSchema: GraphQLSchema;
+  onComplete?: string;
+  rules?: Array<string | number>;
+}) {
+  const onComplete = input.onComplete
+    ? resolveCompletionHandler(input.onComplete)
+    : failOnBreakingChanges;
+
+  const rules = input.rules
+    ? input.rules
+        .filter(isString)
+        .map(
+          (name): Rule => {
+            const rule = resolveRule(name);
+
+            if (!rule) {
+              throw new Error(`\Rule '${name}' does not exist!\n`);
+            }
+
+            return rule;
+          },
+        )
+        .filter((f) => f)
+    : [];
+
+  const changes = diffSchema(input.oldSchema, input.newSchema, rules);
+
+  if (changes.length === 0) {
+    Logger.success('No changes detected');
+    return;
+  }
+
+  Logger.log(
+    `\nDetected the following changes (${changes.length}) between schemas:\n`,
+  );
+
+  const breakingChanges = changes.filter(
+    (change) => change.criticality.level === CriticalityLevel.Breaking,
+  );
+  const dangerousChanges = changes.filter(
+    (change) => change.criticality.level === CriticalityLevel.Dangerous,
+  );
+  const nonBreakingChanges = changes.filter(
+    (change) => change.criticality.level === CriticalityLevel.NonBreaking,
+  );
+
+  if (breakingChanges.length) {
+    reportBreakingChanges(breakingChanges);
+  }
+
+  if (dangerousChanges.length) {
+    reportDangerousChanges(dangerousChanges);
+  }
+
+  if (nonBreakingChanges.length) {
+    reportNonBreakingChanges(nonBreakingChanges);
+  }
+
+  onComplete({breakingChanges, dangerousChanges, nonBreakingChanges});
+}
 
 export default createCommand<
   {},
   {
     oldSchema: string;
     newSchema: string;
-    rule?: string[];
+    rule?: Array<string | number>;
     onComplete?: string;
   } & GlobalArgs
 >((api) => {
@@ -44,14 +111,12 @@ export default createCommand<
         })
         .options({
           rule: {
-            alias: 'rule',
             describe: 'Add rules',
             array: true,
           },
           onComplete: {
-            alias: 'onComplete',
             describe: 'Handle Completion',
-            type: 'string'
+            type: 'string',
           },
         });
     },
@@ -70,58 +135,12 @@ export default createCommand<
           token,
         });
 
-        const onComplete = args.onComplete ? resolveCompletionHandler(args.onComplete) : failOnBreakingChanges
-
-        const rules = args.rule
-          ? args.rule
-              .map(
-                (name): Rule => {
-                  const rule = resolveRule(name);
-
-                  if (!rule) {
-                    throw new Error(`\Rule '${name}' does not exist!\n`);
-                  }
-
-                  return rule;
-                },
-              )
-              .filter((f) => f)
-          : [];
-
-        const changes = diffSchema(oldSchema, newSchema, rules);
-
-        if (changes.length === 0) {
-          Logger.success('No changes detected');
-          return;
-        }
-
-        Logger.log(
-          `\nDetected the following changes (${changes.length}) between schemas:\n`,
-        );
-
-        const breakingChanges = changes.filter(
-          (change) => change.criticality.level === CriticalityLevel.Breaking,
-        );
-        const dangerousChanges = changes.filter(
-          (change) => change.criticality.level === CriticalityLevel.Dangerous,
-        );
-        const nonBreakingChanges = changes.filter(
-          (change) => change.criticality.level === CriticalityLevel.NonBreaking,
-        );
-
-        if (breakingChanges.length) {
-          reportBreakingChanges(breakingChanges);
-        }
-
-        if (dangerousChanges.length) {
-          reportDangerousChanges(dangerousChanges);
-        }
-
-        if (nonBreakingChanges.length) {
-          reportNonBreakingChanges(nonBreakingChanges);
-        }
-        
-        onComplete({ breakingChanges, dangerousChanges, nonBreakingChanges })
+        handler({
+          oldSchema,
+          newSchema,
+          rules: args.rule,
+          onComplete: args.onComplete,
+        });
       } catch (error) {
         Logger.error(error);
         throw error;
@@ -185,11 +204,11 @@ function resolveRule(name: string): Rule | undefined {
 
 function resolveCompletionHandler(name: string): CompletionHandler | never {
   const filepath = ensureAbsolute(name);
-  
+
   try {
-    require.resolve(filepath)
+    require.resolve(filepath);
   } catch (error) {
-    throw new Error(`CompletionHandler '${name}' does not exist!`)
+    throw new Error(`CompletionHandler '${name}' does not exist!`);
   }
 
   const mod = require(filepath);
@@ -197,7 +216,7 @@ function resolveCompletionHandler(name: string): CompletionHandler | never {
   return mod?.default || mod;
 }
 
-function failOnBreakingChanges({ breakingChanges }: CompletionArgs) {
+function failOnBreakingChanges({breakingChanges}: CompletionArgs) {
   const breakingCount = breakingChanges.length;
 
   if (breakingCount) {
@@ -210,4 +229,8 @@ function failOnBreakingChanges({ breakingChanges }: CompletionArgs) {
   } else {
     Logger.success('No breaking changes detected');
   }
+}
+
+function isString(val: any): val is string {
+  return typeof val === 'string';
 }

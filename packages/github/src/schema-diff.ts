@@ -14,6 +14,7 @@ import {createLogger} from './helpers/logger';
 import {MissingConfigError} from './helpers/errors';
 
 export async function handleSchemaDiff({
+  action,
   context,
   ref,
   repo,
@@ -23,6 +24,7 @@ export async function handleSchemaDiff({
   loadFile,
   loadConfig,
 }: {
+  action: string;
   context: probot.Context;
   owner: string;
   repo: string;
@@ -39,6 +41,7 @@ export async function handleSchemaDiff({
   const logger = createLogger('DIFF', context);
 
   logger.info(`Started - ${id}`);
+  logger.info(`Action: "${action}"`);
 
   const checkUrl = await start({
     context,
@@ -60,6 +63,7 @@ export async function handleSchemaDiff({
 
     const branches = pullRequests.map((pr) => pr.base.ref);
     const firstBranch = branches[0];
+    const fallbackBranch = firstBranch || before;
 
     logger.info(`fallback branch from Pull Requests: ${firstBranch}`);
     logger.info(`SHA before push: ${before}`);
@@ -68,7 +72,7 @@ export async function handleSchemaDiff({
     const config = createConfig(
       rawConfig as any,
       branches,
-      firstBranch || before, // we will probably throw an error when both are not defined
+      fallbackBranch, // we will probably throw an error when both are not defined
     );
 
     if (!config.diff) {
@@ -83,6 +87,17 @@ export async function handleSchemaDiff({
       return;
     } else {
       logger.info(`enabled`);
+    }
+
+    if (!config.branch || /^[0]+$/.test(config.branch)) {
+      logger.info(`Nothing to compare with. Skipping...`);
+      await complete({
+        url: checkUrl,
+        context,
+        conclusion: CheckConclusion.Success,
+        logger,
+      });
+      return;
     }
 
     const oldPointer: SchemaPointer = {
@@ -112,9 +127,11 @@ export async function handleSchemaDiff({
     const schemas = {
       old: buildSchema(sources.old, {
         assumeValid: true,
+        assumeValidSDL: true,
       }),
       new: buildSchema(sources.new, {
         assumeValid: true,
+        assumeValidSDL: true,
       }),
     };
 
